@@ -1,0 +1,101 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[5]:
+
+
+from datetime import datetime, timedelta
+
+class Device:
+    def __init__(self, device_id, device_type, owner, firmware="1.0.0"):
+        # Encapsulation via private attributes to prevent IDOR vulnerabilities
+        self.__id = device_id
+        self.__type = device_type
+        self.__firmware = firmware
+        self.__owner = owner
+        self.__active = True
+        self.__last_scan = datetime.now()
+        # Using a list of formatted strings for a clean audit trail
+        self.__history = [f"Device initialized at {self.__last_scan}"]
+
+    @property
+    def is_compliant(self):
+        # Dynamic compliance check: fails if last scan is older than 30 days
+        expiry_date = self.__last_scan + timedelta(days=30)
+        return datetime.now() <= expiry_date
+
+    def authorize_control(self, user):
+        # Complex access control logic verifying state and permissions
+        timestamp = datetime.now()
+        
+        # 1. Integrity Check
+        if not self.__active:
+            self.__history.append(f"{timestamp}: Blocked access (Quarantined)")
+            return False
+            
+        # 2. Compliance and Privilege Check
+        # Admins can bypass compliance issues, standard users cannot
+        if not self.is_compliant and user.privilege_level != "admin":
+            self.__history.append(f"{timestamp}: Denied {user.username} (Non-compliant)")
+            return False
+            
+        # 3. Ownership Validation
+        if user.username != self.__owner and user.privilege_level != "admin":
+            self.__history.append(f"{timestamp}: Denied {user.username} (Ownership mismatch)")
+            return False
+
+        self.__history.append(f"{timestamp}: Granted control to {user.username}")
+        return True
+
+    def perform_security_update(self, new_version, admin_user):
+        # Restricted method ensuring only admins can modify firmware
+        if admin_user.privilege_level == "admin":
+            self.__firmware = new_version
+            self.__last_scan = datetime.now() # Resetting scan timer on update
+            self.__history.append(f"Firmware updated to {new_version} by {admin_user.username}")
+            return True
+        return False
+
+    def toggle_quarantine(self, status, admin_user):
+        # Administrative override to isolate the device
+        if admin_user.privilege_level == "admin":
+            self.__active = not status
+            state = "Quarantined" if status else "Released"
+            self.__history.append(f"Device {state} by {admin_user.username}")
+            return True
+        return False
+
+    def get_status_report(self):
+        # Returns a structured summary of the device's current security state
+        return {
+            "ID": self.__id,
+            "Type": self.__type,
+            "Firmware": self.__firmware,
+            "Compliant": self.is_compliant,
+            "Active": self.__active,
+            "Owner": self.__owner
+        }
+
+class DeviceRegistry:
+    def __init__(self):
+        # Internal registry using a dictionary for efficient lookup
+        self.__inventory = {}
+
+    def register_device(self, device_obj):
+        # Adding device to the system tracking
+        specs = device_obj.get_status_report()
+        self.__inventory[specs["ID"]] = device_obj
+
+    def generate_admin_report(self, admin_user):
+        # Secure report generation restricted to high-privilege accounts
+        if admin_user.privilege_level != "admin":
+            return "Access Denied: Administrative privileges required."
+        
+        return [dev.get_status_report() for dev in self.__inventory.values()]
+
+
+# In[ ]:
+
+
+
+
