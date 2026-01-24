@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+import os
+
+# Discount mapping for automated price calculation
+CATEGORY_DISCOUNTS = {
+    "Electronics": 0.10,
+    "Clothing": 0.15,
+    "Books": 0.05,
+    "Home": 0.12
+}
+
+TIER_DISCOUNTS = {
+    "Premium": 0.05,
+    "Standard": 0.00,
+    "Budget": 0.02
+}
+
+def generate_pricing_report():
+    input_file = "products.txt"
+    output_file = "pricing_report.txt"
+    
+    total_products = 0
+    discount_sum = 0
+    
+    # Process files using context managers for safety
+    try:
+        with open(input_file, "r") as f_in, open(output_file, "w") as f_out:
+            # Generate report header with fixed-width alignment
+            header = f"{'Product Name':<25} | {'Base Price':>10} | {'Disc %':>8} | {'Disc Amt':>10} | {'Final Price':>12}\n"
+            f_out.write(header)
+            f_out.write("-" * 80 + "\n")
+            
+            for line in f_in:
+                try:
+                    # Parse comma-separated variables and strip whitespace
+                    parts = [p.strip() for p in line.strip().split(",")]
+                    if len(parts) != 4:
+                        continue
+                        
+                    name, base_price_str, category, tier = parts
+                    base_price = float(base_price_str)
+                    
+                    # Calculate cumulative discount rates from category and tier mappings
+                    c_rate = CATEGORY_DISCOUNTS.get(category, 0.0)
+                    t_rate = TIER_DISCOUNTS.get(tier, 0.0)
+                    total_rate = c_rate + t_rate
+                    
+                    discount_val = base_price * total_rate
+                    final_val = base_price - discount_val
+                    
+                    total_products += 1
+                    discount_sum += total_rate
+                    
+                    # Format numerical data for tabular report output
+                    row = f"{name:<25} | {base_price:>10.2f} | {total_rate:>7.0%} | {discount_val:>10.2f} | {final_val:>12.2f}\n"
+                    f_out.write(row)
+                    
+                except ValueError:
+                    # Skip execution for non-numeric price data
+                    continue
+
+    
+        if total_products > 0:
+            avg_disc = (discount_sum / total_products) * 100
+            print(f"Total Products: {total_products}")
+            print(f"Average Discount: {avg_disc:.2f}%")
+
+    except FileNotFoundError:
+        print(f"Error: Missing {input_file}")
+    except PermissionError:
+        print(f"Error: Write access denied for {output_file}")
+
+if __name__ == "__main__":
+    generate_pricing_report()
+
+
+# In[ ]:
+
+
+
+
