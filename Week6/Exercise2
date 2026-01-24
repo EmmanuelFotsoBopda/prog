@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+# Setup main data structures
+student_records = []
+unique_scores = set()
+grade_distribution = {}
+
+# Collect names and scores for 6 students
+for i in range(6):
+    name = input(f"Enter name for student {i+1}: ")
+    score = int(input(f"Enter score for {name}: "))
+    
+    # Save record as a tuple and update the score set
+    student_records.append((name, score))
+    unique_scores.add(score)
+
+# Extract scores to perform statistical calculations
+all_scores = [record[1] for record in student_records]
+stats = {
+    'highest': max(all_scores),
+    'lowest': min(all_scores),
+    'average': sum(all_scores) / len(all_scores)
+}
+
+# Generate frequency distribution for each score
+for score in all_scores:
+    grade_distribution[score] = grade_distribution.get(score, 0) + 1
+
+# Print the final formatted report
+print("\n=== STUDENT RECORDS ===")
+for idx, (name, score) in enumerate(student_records, 1):
+    print(f"{idx}. {name}: {score}")
+
+print("\n=== CLASS STATISTICS ===")
+print(f"Highest Score: {stats['highest']}")
+print(f"Lowest Score: {stats['lowest']}")
+print(f"Average Score: {stats['average']:.2f}")
+
+print("\n=== UNIQUE SCORES ===")
+print(sorted(list(unique_scores)))
+print(f"Total unique scores: {len(unique_scores)}")
+
+print("\n=== GRADE DISTRIBUTION ===")
+for score, count in grade_distribution.items():
+    print(f"Score {score}: {count} student(s)")
+
+
+# In[ ]:
+
+
+
+
