@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+# Initialize data structures for songs and genre tracking
+songs = []
+genre_count = {}
+
+print("Welcome to Music Library Manager!")
+
+# Loop to collect exactly 5 songs from user input
+for i in range(5):
+    print(f"\nEnter Song {i+1}:")
+    name = input("Song name: ")
+    genre = input("Genre: ")
+    
+    # Store song data as a tuple within the list
+    songs.append((name, genre))
+    
+    # Update the genre frequency count in the dictionary
+    genre_count[genre] = genre_count.get(genre, 0) + 1
+
+# Display the formatted music library list
+print("\n=== YOUR MUSIC LIBRARY ===")
+for idx, (name, genre) in enumerate(songs, 1):
+    print(f"{idx}. {name} ({genre})")
+
+# Display genre-specific statistics
+print("\n=== GENRE STATISTICS ===")
+for genre, count in genre_count.items():
+    print(f"{genre}: {count} songs")
+
+# Identify the genre with the highest count
+most_popular = max(genre_count, key=genre_count.get)
+print(f"Most popular genre: {most_popular}")
+
+
+# In[ ]:
+
+
+
+
