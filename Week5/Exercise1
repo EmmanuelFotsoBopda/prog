@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+import string
+import random
+
+# Part A: Individual Validation Functions
+
+def check_min_length(password, min_len=8):
+    # Checks if the password length meets the minimum required threshold
+    return len(password) >= min_len
+
+def has_uppercase(password):
+    # Detects the presence of at least one uppercase letter
+    return any(char.isupper() for char in password)
+
+def has_lowercase(password):
+    # Detects the presence of at least one lowercase letter
+    return any(char.islower() for char in password)
+
+def has_digit(password):
+    # Detects the presence of at least one numerical digit
+    return any(char.isdigit() for char in password)
+
+def has_special_char(password):
+    # Validates the presence of special symbols using the string.punctuation set
+    return any(char in string.punctuation for char in password)
+
+# Part B: Master Validation Function
+
+def validate_password(password):
+    # Consolidates all individual test results into a single dictionary
+    results = {
+        "Minimum length": check_min_length(password),
+        "Uppercase": has_uppercase(password),
+        "Lowercase": has_lowercase(password),
+        "Digit": has_digit(password),
+        "Special Character": has_special_char(password)
+    }
+    
+    # Final check: password is valid only if all criteria return True
+    results["is_valid"] = all(results.values())
+    return results
+
+# Part C: User Interface and Testing
+
+def main():
+    # User input for password evaluation
+    user_input = input("Enter password to test: ")
+    
+    # Run the validation and retrieve results
+    report = validate_password(user_input)
+    
+    print("\n--- Validation Report ---")
+    # Display individual status for each security rule
+    for rule, met in report.items():
+        if rule != "is_valid":
+            print(f"{rule}: {'Met' if met else 'Not met'}")
+    
+    # Final assessment and dynamic user feedback
+    if report["is_valid"]:
+        print("\nOverall Status: Strong")
+        print(f"Feedback: {random.choice(['Excellent choice!', 'Security standards met.'])}")
+    else:
+        print("\nOverall Status: Weak")
+        # Provide random hint for password improvement
+        hints = [
+            "Hint: Use 8+ characters and mix numbers with symbols.",
+            "Hint: Combine both uppercase and lowercase letters.",
+            "Hint: Add special characters like '!' or '#' to increase complexity."
+        ]
+        print(f"Feedback: {random.choice(hints)}")
+
+if __name__ == "__main__":
+    main()
+
