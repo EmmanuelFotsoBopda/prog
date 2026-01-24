@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+import logging
+from collections import Counter
+
+# Set up operational logging for analysis tracking
+logging.basicConfig(
+    filename='analysis_audit.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+def run_log_analysis(source_log):
+    # Initialize counters and sets for traffic metrics
+    request_total = 0
+    unique_ips = set()
+    method_counts = Counter()
+    url_counts = Counter()
+    
+    security_alerts = []
+    http_errors = []
+
+    try:
+        logging.info(f"Analyzing: {source_log}")
+        
+        # Read file line-by-line to minimize memory footprint
+        with open(source_log, "r") as f:
+            for line in f:
+                request_total += 1
+                
+                try:
+                    # Extract log components based on standard space-delimited format
+                    segments = line.split()
+                    if len(segments) < 9:
+                        continue
+                        
+                    ip = segments[0]
+                    method = segments[5].strip('"')
+                    url = segments[6]
+                    status = segments[-2]
+                    
+                    unique_ips.add(ip)
+                    method_counts[method] += 1
+                    url_counts[url] += 1
+                    
+                    # Security logic: Trigger alerts for 401 (Unauthorized) and 403 (Forbidden)
+                    if status in ["401", "403"]:
+                        msg = f"Alert: {status} at {url} by {ip}"
+                        security_alerts.append(msg)
+                        logging.warning(msg)
+                    
+                    # Collect all status codes in the 4xx and 5xx range
+                    if status.startswith(('4', '5')):
+                        http_errors.append(line.strip())
+                        
+                except Exception as e:
+                    logging.error(f"Logic error on line {request_total}: {e}")
+
+        # Export findings to categorized output files
+        with open("summary_report.txt", "w") as f:
+            f.write(f"Requests: {request_total}\nVisitors: {len(unique_ips)}\n")
+
+        with open("security_incidents.txt", "w") as f:
+            for alert in security_alerts:
+                f.write(alert + "\n")
+
+        with open("error_log.txt", "w") as f:
+            for err in http_errors:
+                f.write(err + "\n")
+
+        logging.info("Analysis successfully finalized.")
+
+    except FileNotFoundError:
+        print("Analysis failed: Source log not found.")
+    except Exception as e:
+        logging.critical(f"System failure: {e}")
+
+if __name__ == "__main__":
+    run_log_analysis("server.log")
+
+
+# In[ ]:
+
+
+
+
