@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+# Dataset of passwords for policy compliance check
+passwords = ["Pass123", "SecurePassword1", "weak", "MyP@ssword", "NOLOWER123"]
+
+print("Validating passwords...")
+compliant = 0
+non_compliant = 0
+
+for pwd in passwords:
+    # Logic table defining password complexity requirements
+    checks = [
+        (len(pwd) >= 8, "Too short"),
+        (any(c.isupper() for c in pwd), "No uppercase"),
+        (any(c.islower() for c in pwd), "No lowercase letters"),
+        (any(c.isdigit() for c in pwd), "No digits")
+    ]
+    
+    # Generate error descriptions only for failed conditions
+    errors = [msg for condition, msg in checks if not condition]
+
+    if not errors:
+        print(f"PASS: '{pwd}' - Meets all requirements")
+        compliant += 1
+    else:
+        print(f"FAIL: '{pwd}' - {', '.join(errors)}")
+        non_compliant += 1
+
+print(f"Summary: {compliant} compliant, {non_compliant} non-compliant")
+
