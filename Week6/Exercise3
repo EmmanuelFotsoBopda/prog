@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+# Initialize data structures for expense tracking
+expense_records = []
+category_totals = {}
+unique_categories = set()
+
+# Collect between 5 to 7 expenses as requested
+for i in range(5):
+    print(f"\nEnter expense {i+1}:")
+    category = input("Category (e.g., Food, Transport): ")
+    amount = float(input("Amount: "))
+    date = input("Date (YYYY-MM-DD): ")
+    
+    # Store expense entry as a structured tuple
+    expense_record = (category, amount, date)
+    expense_records.append(expense_record)
+    
+    # Track distinct categories and aggregate spending totals
+    unique_categories.add(category)
+    category_totals[category] = category_totals.get(category, 0) + amount
+
+# Aggregate overall spending statistics
+amounts = [exp[1] for exp in expense_records]
+overall_stats = {
+    "total": sum(amounts),
+    "average": sum(amounts) / len(amounts),
+    "highest": max(expense_records, key=lambda x: x[1]),
+    "lowest": min(expense_records, key=lambda x: x[1])
+}
+
+# Generate a comprehensive financial report
+print("\n=== PERSONAL EXPENSE TRACKER ===")
+print("\nUNIQUE CATEGORIES SPENT ON")
+print(f"{unique_categories}")
+print(f"Total unique categories: {len(unique_categories)}")
+
+print("\nSPENDING BY CATEGORY")
+for cat, total in category_totals.items():
+    print(f"{cat}: ${total:.2f}")
+
+print("\nOVERALL SPENDING SUMMARY")
+print(f"Total Spending: ${overall_stats['total']:.2f}")
+print(f"Average Expense: ${overall_stats['average']:.2f}")
+# Access specific tuple elements for high/low expense reporting
+h_cat, h_amt, h_date = overall_stats['highest']
+l_cat, l_amt, l_date = overall_stats['lowest']
+print(f"Highest Expense: ${h_amt:.2f} (Category: {h_cat}, Date: {h_date})")
+print(f"Lowest Expense: ${l_amt:.2f} (Category: {l_cat}, Date: {l_date})")
+
+
+# In[ ]:
+
+
+
+
