@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+import datetime
+
+class User:
+    def __init__(self, username, hashed_password, privilege_level="standard"):
+        # Private attributes for sensitive data protection
+        self.__username = username
+        self.__password = hashed_password
+        self.__privilege_level = privilege_level  # admin, standard, or guest
+        self.__login_attempts = 0
+        self.__status = "active" # active or locked
+
+    # Encapsulated authentication logic with account lockout
+    def authenticate(self, provided_password):
+        if self.__status == "locked":
+            self.__log_activity("Login attempt on locked account")
+            return "Account is locked. Please contact admin."
+
+        if provided_password == self.__password:
+            self.__reset_login_attempts()
+            self.__log_activity("Successful login")
+            return True
+        else:
+            self.__login_attempts += 1
+            self.__log_activity("Failed login attempt")
+            # Lock account after 3 failed attempts
+            if self.__login_attempts >= 3:
+                self.__status = "locked"
+                return "Too many failed attempts. Account locked."
+            return False
+
+    # Private method for internal audit trail
+    def __log_activity(self, action):
+        timestamp = datetime.datetime.now()
+        print(f"LOG [{timestamp}] User: {self.__username} - Action: {action}")
+
+    def __reset_login_attempts(self):
+        self.__login_attempts = 0
+
+    # Securely display user info without exposing private attributes
+    def display_user_info(self):
+        return f"User: {self.__username} | Role: {self.__privilege_level} | Status: {self.__status}"
+
+    # Controlled privilege escalation
+    def set_privilege(self, new_level, authorized=False):
+        if authorized and new_level in ["admin", "standard", "guest"]:
+            self.__privilege_level = new_level
+            self.__log_activity(f"Privilege escalated to {new_level}")
+        else:
+            self.__log_activity("Unauthorized privilege escalation attempt")
+
+
+# In[ ]:
+
+
+
+
