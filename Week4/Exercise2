@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+# Network configurations and list of non-compliant ports
+devices = [
+    ("192.168.1.10", [22, 80, 443]),
+    ("192.168.1.11", [21, 22, 80]),
+    ("192.168.1.12", [23, 80, 3389])
+]
+risky_ports_set = {21, 23, 3389}
+
+print("Scanning network devices...")
+total_risks = 0
+
+# Identify matches between open ports and the risky port set
+for ip, open_ports in devices:
+    # Use set intersection to isolate risky ports efficiently
+    found_risky = set(open_ports).intersection(risky_ports_set)
+    
+    for port in sorted(found_risky):
+        print(f"WARNING: {ip} has risky port {port} open")
+        total_risks += 1
+
+print(f"Scan complete: {total_risks} security risks found")
+
