@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+from fastapi import APIRouter, HTTPException
+from schema import User, UserCreate
+import json
+import os
+
+router = APIRouter()
+STORAGE_FILE = "users.txt"
+
+# Helper to load existing records from the persistent file
+def read_db():
+    if not os.path.exists(STORAGE_FILE):
+        return []
+    with open(STORAGE_FILE, "r") as f:
+        try:
+            return json.load(f)
+        except json.JSONDecodeError:
+            return []
+
+# Helper to save updated records back to the file
+def write_db(data):
+    with open(STORAGE_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
+@router.post("/", response_model=User)
+def create_entry(user_in: UserCreate):
+    # Logic to create a user and assign a unique ID
+    db = read_db()
+    new_id = max([u["id"] for u in db], default=0) + 1
+    new_user = {"id": new_id, **user_in.dict()}
+    db.append(new_user)
+    write_db(db)
+    return new_user
+
+@router.get("/", response_model=list[User])
+def get_all():
+    # Returns the full list of users
+    return read_db()
+
+# Search endpoint defined before parametric route to avoid conflicts
+@router.get("/search", response_model=list[User])
+def search_by_name(q: str):
+    db = read_db()
+    return [u for u in db if q.lower() in u["name"].lower()]
+
+@router.get("/{id}", response_model=User)
+def get_by_id(id: int):
+    # Retrieve a specific user by their unique ID
+    db = read_db()
+    user = next((u for u in db if u["id"] == id), None)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+@router.put("/{id}", response_model=User)
+def update_entry(id: int, update_data: UserCreate):
+    # Updates existing user details based on ID
+    db = read_db()
+    for u in db:
+        if u["id"] == id:
+            u.update(update_data.dict())
+            write_db(db)
+            return u
+    raise HTTPException(status_code=404, detail="User not found")
+
+@router.delete("/{id}")
+def remove_entry(id: int):
+    # Logic to remove a user record from the persistent file
+    db = read_db()
+    updated_db = [u for u in db if u["id"] != id]
+    if len(updated_db) == len(db):
+        raise HTTPException(status_code=404, detail="User not found")
+    write_db(updated_db)
+    return {"status": "success", "message": f"User {id} deleted"}
+
+
+# In[ ]:
+
+
+
+
