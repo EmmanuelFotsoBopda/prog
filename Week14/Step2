@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+from fastapi import APIRouter, HTTPException
+from schema import User, UserCreate
+from user_store import UserStore
+
+router = APIRouter()
+# Initializing the global store instance [cite: 772, 775]
+store = UserStore("users.txt")
+
+@router.get("/", response_model=list[User])
+def get_users():
+    # Using the store method to retrieve all users [cite: 777, 778]
+    return store.load()
+
+@router.post("/", response_model=User)
+def create_user(user_in: UserCreate):
+    # Logic for adding a new user through the store [cite: 781, 782]
+    users = store.load()
+    new_id = max([u["id"] for u in users], default=0) + 1
+    new_user = {"id": new_id, **user_in.dict()}
+    users.append(new_user)
+    store.save(users)
+    return new_user
+
+@router.put("/{user_id}", response_model=User)
+def update_user(user_id: int, user_update: UserCreate):
+    # Extension: PUT endpoint using update_user() method [cite: 795, 797]
+    if store.update_user(user_id, user_update.dict()):
+        return {"id": user_id, **user_update.dict()}
+    raise HTTPException(status_code=404, detail="User not found")
+
+@router.delete("/{user_id}")
+def delete_user(user_id: int):
+    # Extension: DELETE endpoint using delete_user() method [cite: 795, 797]
+    if store.delete_user(user_id):
+        return {"message": "User deleted"}
+    raise HTTPException(status_code=404, detail="User not found")
+
+
+# In[ ]:
+
+
+
+
