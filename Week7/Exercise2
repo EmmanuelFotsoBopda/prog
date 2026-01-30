@@ -1,86 +1,65 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
-import logging
-from collections import Counter
+import os
 
-# Set up operational logging for analysis tracking
-logging.basicConfig(
-    filename='analysis_audit.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+# Discount definitions according to business logic [cite: 776, 777]
+CAT_DISCOUNTS = {"Electronics": 0.10, "Clothing": 0.15, "Books": 0.05, "Home": 0.12}
+TIER_DISCOUNTS = {"Premium": 0.05, "Standard": 0.00, "Budget": 0.02}
 
-def run_log_analysis(source_log):
-    # Initialize counters and sets for traffic metrics
-    request_total = 0
-    unique_ips = set()
-    method_counts = Counter()
-    url_counts = Counter()
-    
-    security_alerts = []
-    http_errors = []
+def process_pricing():
+    input_file = "products.txt"
+    output_file = "pricing_report.txt"
+    total_processed = 0
+    total_discount_pct = 0
 
+    # Ensure files are handled safely using the 'with' statement [cite: 772]
     try:
-        logging.info(f"Analyzing: {source_log}")
-        
-        # Read file line-by-line to minimize memory footprint
-        with open(source_log, "r") as f:
-            for line in f:
-                request_total += 1
-                
+        with open(input_file, "r") as f_in, open(output_file, "w") as f_out:
+            # Writing report headers for aligned output 
+            f_out.write(f"{'Product':<25} | {'Base':>8} | {'Disc %':>8} | {'Disc Amt':>8} | {'Final':>10}\n")
+            f_out.write("-" * 75 + "\n")
+
+            for line in f_in:
                 try:
-                    # Extract log components based on standard space-delimited format
-                    segments = line.split()
-                    if len(segments) < 9:
-                        continue
-                        
-                    ip = segments[0]
-                    method = segments[5].strip('"')
-                    url = segments[6]
-                    status = segments[-2]
+                    # Parsing CSV format: Name, Price, Category, Tier [cite: 764, 765]
+                    parts = [p.strip() for p in line.strip().split(",")]
+                    if len(parts) != 4: continue
                     
-                    unique_ips.add(ip)
-                    method_counts[method] += 1
-                    url_counts[url] += 1
+                    name, base_price_str, category, tier = parts
+                    base_price = float(base_price_str)
                     
-                    # Security logic: Trigger alerts for 401 (Unauthorized) and 403 (Forbidden)
-                    if status in ["401", "403"]:
-                        msg = f"Alert: {status} at {url} by {ip}"
-                        security_alerts.append(msg)
-                        logging.warning(msg)
+                    # Calculating additive discounts [cite: 763, 766]
+                    disc_pct = CAT_DISCOUNTS.get(category, 0) + TIER_DISCOUNTS.get(tier, 0)
+                    disc_amt = base_price * disc_pct
+                    final_price = base_price - disc_amt
                     
-                    # Collect all status codes in the 4xx and 5xx range
-                    if status.startswith(('4', '5')):
-                        http_errors.append(line.strip())
-                        
-                except Exception as e:
-                    logging.error(f"Logic error on line {request_total}: {e}")
+                    total_processed += 1
+                    total_discount_pct += disc_pct
+                    
+                    # Writing formatted product row [cite: 770, 787]
+                    f_out.write(f"{name:<25} | {base_price:>8.2f} | {disc_pct:>7.0%} | {disc_amt:>8.2f} | {final_price:>10.2f}\n")
+                
+                except ValueError:
+                    # Handling invalid price formats within the file [cite: 774, 775]
+                    print(f"Skipping line due to invalid price format: {line.strip()}")
 
-        # Export findings to categorized output files
-        with open("summary_report.txt", "w") as f:
-            f.write(f"Requests: {request_total}\nVisitors: {len(unique_ips)}\n")
-
-        with open("security_incidents.txt", "w") as f:
-            for alert in security_alerts:
-                f.write(alert + "\n")
-
-        with open("error_log.txt", "w") as f:
-            for err in http_errors:
-                f.write(err + "\n")
-
-        logging.info("Analysis successfully finalized.")
+        # Console summary of processing statistics [cite: 779, 788]
+        if total_processed > 0:
+            avg_disc = (total_discount_pct / total_processed) * 100
+            print(f"Total products processed: {total_processed}")
+            print(f"Average discount applied: {avg_disc:.2f}%")
 
     except FileNotFoundError:
-        print("Analysis failed: Source log not found.")
-    except Exception as e:
-        logging.critical(f"System failure: {e}")
+        print(f"Error: The input file '{input_file}' was not found.") # [cite: 775]
+    except PermissionError:
+        print(f"Error: Write permissions denied for '{output_file}'.") # [cite: 774]
 
 if __name__ == "__main__":
-    run_log_analysis("server.log")
+    process_pricing()
 
 
 # In[ ]:
