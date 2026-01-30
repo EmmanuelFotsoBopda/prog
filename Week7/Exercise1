@@ -1,82 +1,65 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 import os
 
-# Discount mapping for automated price calculation
-CATEGORY_DISCOUNTS = {
-    "Electronics": 0.10,
-    "Clothing": 0.15,
-    "Books": 0.05,
-    "Home": 0.12
-}
+# Discount definitions according to business logic [cite: 776, 777]
+CAT_DISCOUNTS = {"Electronics": 0.10, "Clothing": 0.15, "Books": 0.05, "Home": 0.12}
+TIER_DISCOUNTS = {"Premium": 0.05, "Standard": 0.00, "Budget": 0.02}
 
-TIER_DISCOUNTS = {
-    "Premium": 0.05,
-    "Standard": 0.00,
-    "Budget": 0.02
-}
-
-def generate_pricing_report():
+def process_pricing():
     input_file = "products.txt"
     output_file = "pricing_report.txt"
-    
-    total_products = 0
-    discount_sum = 0
-    
-    # Process files using context managers for safety
+    total_processed = 0
+    total_discount_pct = 0
+
+    # Ensure files are handled safely using the 'with' statement [cite: 772]
     try:
         with open(input_file, "r") as f_in, open(output_file, "w") as f_out:
-            # Generate report header with fixed-width alignment
-            header = f"{'Product Name':<25} | {'Base Price':>10} | {'Disc %':>8} | {'Disc Amt':>10} | {'Final Price':>12}\n"
-            f_out.write(header)
-            f_out.write("-" * 80 + "\n")
-            
+            # Writing report headers for aligned output 
+            f_out.write(f"{'Product':<25} | {'Base':>8} | {'Disc %':>8} | {'Disc Amt':>8} | {'Final':>10}\n")
+            f_out.write("-" * 75 + "\n")
+
             for line in f_in:
                 try:
-                    # Parse comma-separated variables and strip whitespace
+                    # Parsing CSV format: Name, Price, Category, Tier [cite: 764, 765]
                     parts = [p.strip() for p in line.strip().split(",")]
-                    if len(parts) != 4:
-                        continue
-                        
+                    if len(parts) != 4: continue
+                    
                     name, base_price_str, category, tier = parts
                     base_price = float(base_price_str)
                     
-                    # Calculate cumulative discount rates from category and tier mappings
-                    c_rate = CATEGORY_DISCOUNTS.get(category, 0.0)
-                    t_rate = TIER_DISCOUNTS.get(tier, 0.0)
-                    total_rate = c_rate + t_rate
+                    # Calculating additive discounts [cite: 763, 766]
+                    disc_pct = CAT_DISCOUNTS.get(category, 0) + TIER_DISCOUNTS.get(tier, 0)
+                    disc_amt = base_price * disc_pct
+                    final_price = base_price - disc_amt
                     
-                    discount_val = base_price * total_rate
-                    final_val = base_price - discount_val
+                    total_processed += 1
+                    total_discount_pct += disc_pct
                     
-                    total_products += 1
-                    discount_sum += total_rate
-                    
-                    # Format numerical data for tabular report output
-                    row = f"{name:<25} | {base_price:>10.2f} | {total_rate:>7.0%} | {discount_val:>10.2f} | {final_val:>12.2f}\n"
-                    f_out.write(row)
-                    
+                    # Writing formatted product row [cite: 770, 787]
+                    f_out.write(f"{name:<25} | {base_price:>8.2f} | {disc_pct:>7.0%} | {disc_amt:>8.2f} | {final_price:>10.2f}\n")
+                
                 except ValueError:
-                    # Skip execution for non-numeric price data
-                    continue
+                    # Handling invalid price formats within the file [cite: 774, 775]
+                    print(f"Skipping line due to invalid price format: {line.strip()}")
 
-    
-        if total_products > 0:
-            avg_disc = (discount_sum / total_products) * 100
-            print(f"Total Products: {total_products}")
-            print(f"Average Discount: {avg_disc:.2f}%")
+        # Console summary of processing statistics [cite: 779, 788]
+        if total_processed > 0:
+            avg_disc = (total_discount_pct / total_processed) * 100
+            print(f"Total products processed: {total_processed}")
+            print(f"Average discount applied: {avg_disc:.2f}%")
 
     except FileNotFoundError:
-        print(f"Error: Missing {input_file}")
+        print(f"Error: The input file '{input_file}' was not found.") # [cite: 775]
     except PermissionError:
-        print(f"Error: Write access denied for {output_file}")
+        print(f"Error: Write permissions denied for '{output_file}'.") # [cite: 774]
 
 if __name__ == "__main__":
-    generate_pricing_report()
+    process_pricing()
 
 
 # In[ ]:
