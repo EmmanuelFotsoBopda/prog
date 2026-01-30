@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+from fastapi import FastAPI
+from routes import users
+
+app = FastAPI(
+    title="User Management System",
+    description="A modular API for handling user records via JSON persistence",
+    version="2.0.0"
+)
+
+# Integrating the user routes with prefixing and tagging
+app.include_router(users.router, prefix="/users", tags=["Users"])
+
+@app.get("/")
+def api_root():
+    # Root health check endpoint
+    return {"message": "User Management API is operational"}
+
+@app.get("/health")
+def system_health():
+    # Detailed monitoring endpoint
+    return {"status": "online", "timestamp": "checked"}
+
+
+# In[ ]:
+
+
+
+
