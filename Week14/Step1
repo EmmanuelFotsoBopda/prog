@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+import json
+import os
+
+class UserStore:
+    def __init__(self, file_path):
+        # Initializing with the persistent storage path [cite: 759, 763]
+        self.file_path = file_path
+
+    def load(self):
+        # Safely reading users from JSON file [cite: 761, 764]
+        if not os.path.exists(self.file_path):
+            return []
+        try:
+            with open(self.file_path, "r") as f:
+                return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            # Graceful error handling for missing or malformed files 
+            return []
+
+    def save(self, users):
+        # Writing the complete list back to storage [cite: 766, 769]
+        with open(self.file_path, "w") as f:
+            json.dump(users, f, indent=4)
+
+    def find_by_id(self, user_id):
+        # Searching for a specific record by ID [cite: 767, 770]
+        users = self.load()
+        return next((u for u in users if u["id"] == user_id), None)
+
+    def update_user(self, user_id, updated_data):
+        # Extension: Updating an existing user record [cite: 753, 789]
+        users = self.load()
+        for u in users:
+            if u["id"] == user_id:
+                u.update(updated_data)
+                self.save(users)
+                return True
+        return False
+
+    def delete_user(self, user_id):
+        # Extension: Removing a user record by ID [cite: 753, 792]
+        users = self.load()
+        initial_count = len(users)
+        users = [u for u in users if u["id"] != user_id]
+        if len(users) < initial_count:
+            self.save(users)
+            return True
+        return False
+
+
+# In[ ]:
+
+
+
+
