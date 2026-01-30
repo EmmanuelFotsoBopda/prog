@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+import sqlite3
+
+class UserStore:
+    def __init__(self, db_path):
+        # Constructor accepts db_path and initializes the database [cite: 825, 826, 833]
+        self.db_path = db_path
+        self.init_db()
+
+    def init_db(self):
+        # Creates the users table if it does not already exist [cite: 828, 834]
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    email TEXT NOT NULL
+                )
+            """)
+            conn.commit() # Ensuring changes are persisted 
+
+    def load(self):
+        # Retrieves all users as a list of dictionaries [cite: 829, 835]
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row # Allows access by column name
+            cursor = conn.execute("SELECT * FROM users")
+            return [dict(row) for row in cursor.fetchall()]
+
+    def save(self, user_data):
+        # Inserts a new user record into the database [cite: 830, 836]
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute(
+                "INSERT INTO users (name, email) VALUES (?, ?)",
+                (user_data["name"], user_data["email"])
+            )
+            conn.commit()
+            return cursor.lastrowid
+
+    def find_by_id(self, user_id):
+        # Uses an SQL query to find a specific user or return None [cite: 831, 837]
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def update_user(self, user_id, updated_data):
+        # Extension: Updates an existing record using SQL UPDATE [cite: 863, 865]
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute(
+                "UPDATE users SET name = ?, email = ? WHERE id = ?",
+                (updated_data["name"], updated_data["email"], user_id)
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+
+    def delete_user(self, user_id):
+        # Extension: Removes a record using SQL DELETE [cite: 864, 866]
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+
+
+# In[ ]:
+
+
+
+
