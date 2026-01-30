@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+#Virtual Environment and Dependencies
+fastapi
+uvicorn
+pydantic
+
